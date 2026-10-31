@@ -1,0 +1,11 @@
+FROM ghcr.io/xtls/xray-core:26.10.21 AS xray
+
+FROM python:3.12-alpine
+
+COPY --from=xray /usr/local/bin/xray /usr/local/bin/xray
+COPY deploy/xray_vless_entrypoint.py /usr/local/bin/xray-vless-entrypoint
+
+RUN addgroup -S xray && adduser -S -G xray xray
+
+USER xray
+ENTRYPOINT ["python", "/usr/local/bin/xray-vless-entrypoint"]

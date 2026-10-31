@@ -1,0 +1,102 @@
+@font-face {
+  font-family: "Candal";
+  src: url("../assets/fonts/Candal-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face { font-family: "Onest"; src: url("../assets/fonts/Onest-Thin.ttf") format("truetype"); font-style: normal; font-weight: 100; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("../assets/fonts/Onest-ExtraLight.ttf") format("truetype"); font-style: normal; font-weight: 200; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("../assets/fonts/Onest-Light.ttf") format("truetype"); font-style: normal; font-weight: 300; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("../assets/fonts/Onest-Regular.ttf") format("truetype"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("../assets/fonts/Onest-Medium.ttf") format("truetype"); font-style: normal; font-weight: 500; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("../assets/fonts/Onest-SemiBold.ttf") format("truetype"); font-style: normal; font-weight: 600; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("../assets/fonts/Onest-Bold.ttf") format("truetype"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("../assets/fonts/Onest-ExtraBold.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }
+@font-face { font-family: "Onest"; src: url("../assets/fonts/Onest-Black.ttf") format("truetype"); font-style: normal; font-weight: 900; font-display: swap; }
+
+@font-face {
+  font-family: "CM Trebuchet";
+  src: url("../assets/fonts/trebuchet-ms-regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "CM Trebuchet";
+  src: url("../assets/fonts/trebuchet-ms-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "CM Trebuchet";
+  src: url("../assets/fonts/trebuchet-ms-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "CM Trebuchet";
+  src: url("../assets/fonts/trebuchet-ms-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "CM Trebuchet";
+  src: url("../assets/fonts/trebuchet-ms-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "CM Trebuchet";
+  src: url("../assets/fonts/trebuchet-ms-italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "CM Trebuchet";
+  src: url("../assets/fonts/trebuchet-ms-bold-italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --ink: #00195c;
+  --muted: #496397;
+  --light: #7e91bd;
+  --line: #dbe4f2;
+  --line-2: #eaf0f8;
+  --blue: #0057ff;
+  --green: #13a348;
+  --orange: #ff8700;
+  --purple: #6e20c9;
+  --panel: #ffffff;
+  --bg: #ffffff;
+  --shadow: 0 18px 38px rgba(0, 25, 92, 0.045);
+}
+
+* { box-sizing: border-box; }
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
+html, body { overflow-x: hidden; }
+body {
+  margin: 0;
+  min-width: 1120px;
+  color: var(--ink);
+  background: var(--bg);
+  font-family: "CM Trebuchet", "Trebuchet MS", sans-serif;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+[data-russian-text] { font-family: "Onest", "CM Trebuchet", "Trebuchet MS", sans-serif; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:focus:not(:focus-visible) { outline: none; }
+button > svg, a > svg, label > svg { flex: 0 0 auto; min-width: max-content; }
+input, textarea, select { outline: none; }

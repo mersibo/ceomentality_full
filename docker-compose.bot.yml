@@ -1,0 +1,61 @@
+services:
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: ceomentality-bot
+    restart: unless-stopped
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN}
+      BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
+      CRM_API_URL: ${CRM_API_URL:?set CRM_API_URL}
+      TELEGRAM_INTEGRATION_SECRET: ${TELEGRAM_INTEGRATION_SECRET:?set TELEGRAM_INTEGRATION_SECRET}
+      OUTBOX_POLL_SECONDS: ${OUTBOX_POLL_SECONDS:-3}
+      TELEGRAM_PROXY_URL: ${TELEGRAM_PROXY_URL:-socks5://vless-client:1080}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      vless-client:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  vless-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.vless-client
+    restart: unless-stopped
+    init: true
+    environment:
+      VLESS_URL: ${VLESS_URL:?set VLESS_URL}
+      XRAY_SOCKS_PORT: 1080
+      XRAY_LOG_LEVEL: ${XRAY_LOG_LEVEL:-warning}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 1080), 3).close()"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - bot_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  bot_redis:

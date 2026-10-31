@@ -1,0 +1,83 @@
+/* Keep the sidebar control reachable on touch devices and prevent it from
+   changing the horizontal position of the desktop navigation. */
+
+@media (min-width: 901px) {
+  .header-sidebar-toggle-desktop {
+    display: grid !important;
+    flex: 0 0 32px;
+    margin: 0;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .header-sidebar-toggle-mobile {
+    display: none !important;
+  }
+
+  .sidebar-toggle,
+  .sidebar-reveal-zone {
+    display: none !important;
+  }
+}
+
+/* Single-row desktop header. The navigation stays in its own flexible column,
+   while the sidebar trigger lives with the other system actions. */
+@media (min-width: 1041px) {
+  .topbar {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-rows: 68px;
+    column-gap: 0;
+  }
+
+  .brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .system-label {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .main-nav {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: center;
+    justify-content: center;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .top-actions {
+    grid-column: 4;
+    grid-row: 1;
+    margin-left: 24px;
+  }
+}
+
+/* The edge-reveal interaction is enabled only on a genuinely mouse-like
+   device. A wide touch screen keeps the always-visible header button. */
+@media (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  .header-sidebar-toggle-desktop {
+    display: grid !important;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .sidebar-toggle {
+    position: absolute;
+    top: 8px;
+    left: 224px;
+    display: grid !important;
+  }
+
+  .sidebar-collapsed .sidebar-reveal-zone {
+    display: block !important;
+  }
+
+  .sidebar-collapsed .sidebar-toggle {
+    display: grid !important;
+  }
+}

@@ -1,0 +1,10 @@
+import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { Modal } from '../../components/ui/Modal';
+import type { CandidateDraft, CandidateSource, CandidateStage } from '../../types/domain';
+
+export function CandidateForm({onClose,onSubmit}:{onClose:()=>void;onSubmit:(draft:CandidateDraft)=>void}) {
+ const [form,setForm]=useState<CandidateDraft>({name:'',telegram:'',country:'',role:'',company:'',expertise:'Founder / CEO',wave:'',stage:'purchase',summary:'',source:'Website'});
+ const field=<K extends keyof CandidateDraft>(key:K)=>(event:ChangeEvent<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>)=>setForm({...form,[key]:event.target.value as CandidateDraft[K]});
+ const submit=(event:FormEvent)=>{event.preventDefault();onSubmit(form)};
+ return <Modal title="New candidate" onClose={onClose}><form className="form-grid" onSubmit={submit}><label>Name<input required value={form.name} onChange={field('name')}/></label><label>Telegram<input required value={form.telegram} onChange={field('telegram')}/></label><label>Country<input value={form.country} onChange={field('country')}/></label><label>Role<input value={form.role} onChange={field('role')}/></label><label>Company<input value={form.company} onChange={field('company')}/></label><label>Drop / wave<input value={form.wave} onChange={field('wave')}/></label><label>Application<select value={form.stage} onChange={field('stage')}><option value={'purchase' satisfies CandidateStage}>Product purchase</option><option value={'club' satisfies CandidateStage}>Club membership</option></select></label><label>Source<select value={form.source} onChange={field('source')}>{(['Website','Telegram bot','Partner','Referral'] satisfies CandidateSource[]).map(value=><option key={value}>{value}</option>)}</select></label><label className="full">About<textarea required value={form.summary} onChange={field('summary')}/></label><div className="form-actions"><button type="button" className="outline-btn" onClick={onClose}>Cancel</button><button type="submit" className="primary-btn">Create candidate</button></div></form></Modal>;
+}

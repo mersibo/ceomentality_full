@@ -1,0 +1,256 @@
+name: ceomentality
+
+services:
+  landing:
+    build:
+      context: .
+      dockerfile: Dockerfile.landing
+    restart: unless-stopped
+    ports:
+      - "${LANDING_HTTP_BIND:-0.0.0.0}:${LANDING_HTTP_PORT:-8081}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_URL: ""
+    restart: unless-stopped
+    ports:
+      - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    environment:
+      APP_NAME: ${APP_NAME:-CEOMENTALITY API}
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?set POSTGRES_USER}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:?set POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-ceomentality_session}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      ALLOW_INSECURE_HTTP: ${ALLOW_INSECURE_HTTP:-false}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:?set FRONTEND_ORIGIN}
+      FIRST_SUPERUSER_EMAIL: ${FIRST_SUPERUSER_EMAIL:?set FIRST_SUPERUSER_EMAIL}
+      FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD:?set FIRST_SUPERUSER_PASSWORD}
+      TELEGRAM_INTEGRATION_SECRET: ${TELEGRAM_INTEGRATION_SECRET:?set TELEGRAM_INTEGRATION_SECRET}
+      PUBLIC_SESSION_COOKIE_NAME: ${PUBLIC_SESSION_COOKIE_NAME:-ceo_public_session}
+      PUBLIC_SESSION_DAYS: ${PUBLIC_SESSION_DAYS:-7}
+      QUOTE_TTL_MINUTES: ${QUOTE_TTL_MINUTES:-30}
+      DELIVERY_PRICE_KOPECKS: ${DELIVERY_PRICE_KOPECKS:-50000}
+      DELIVERY_PROVIDER: ${DELIVERY_PROVIDER:-fixed}
+      CDEK_API_URL: ${CDEK_API_URL:-https://api.cdek.ru/v2}
+      CDEK_ACCOUNT: ${CDEK_ACCOUNT:-}
+      CDEK_SECURE_PASSWORD: ${CDEK_SECURE_PASSWORD:-}
+      CDEK_SHIPMENT_POINT: ${CDEK_SHIPMENT_POINT:-MSK147}
+      CDEK_SENDER_CITY_CODE: ${CDEK_SENDER_CITY_CODE:-44}
+      CDEK_SENDER_NAME: ${CDEK_SENDER_NAME:-CEOMENTALITY}
+      CDEK_SENDER_PHONE: ${CDEK_SENDER_PHONE:-+79966553590}
+      CDEK_PACKAGE_WEIGHT_GRAMS: ${CDEK_PACKAGE_WEIGHT_GRAMS:-500}
+      CDEK_PACKAGE_LENGTH_CM: ${CDEK_PACKAGE_LENGTH_CM:-13}
+      CDEK_PACKAGE_WIDTH_CM: ${CDEK_PACKAGE_WIDTH_CM:-9}
+      CDEK_PACKAGE_HEIGHT_CM: ${CDEK_PACKAGE_HEIGHT_CM:-4}
+      CDEK_RETURN_PAYER: ${CDEK_RETURN_PAYER:-customer}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-disabled}
+      RUSENDER_API_URL: ${RUSENDER_API_URL:-https://api.rusender.ru/api/v1}
+      RUSENDER_API_TOKEN: ${RUSENDER_API_TOKEN:-}
+      RUSENDER_KEY_ID: ${RUSENDER_KEY_ID:-}
+      EMAIL_OUTBOX_POLL_SECONDS: ${EMAIL_OUTBOX_POLL_SECONDS:-5}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-disabled}
+      PAYMENT_CHECKOUT_BASE_URL: ${PAYMENT_CHECKOUT_BASE_URL:-}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:-}
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-}
+      TBANK_API_URL: ${TBANK_API_URL:-https://securepay.tinkoff.ru/v2}
+      TBANK_TERMINAL_KEY: ${TBANK_TERMINAL_KEY:-}
+      TBANK_PASSWORD: ${TBANK_PASSWORD:-}
+      TBANK_TAXATION: ${TBANK_TAXATION:-usn_income}
+      TBANK_TAX: ${TBANK_TAX:-vat0}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()\"" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  email-worker:
+    profiles: ["email"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    command: ["python", "-m", "app.email_worker"]
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?set POSTGRES_USER}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:?set POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
+      FIRST_SUPERUSER_EMAIL: ${FIRST_SUPERUSER_EMAIL:-manager@ceomentality.club}
+      FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD:?set FIRST_SUPERUSER_PASSWORD}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-disabled}
+      RUSENDER_API_URL: ${RUSENDER_API_URL:-https://api.rusender.ru/api/v1}
+      RUSENDER_API_TOKEN: ${RUSENDER_API_TOKEN:-}
+      RUSENDER_KEY_ID: ${RUSENDER_KEY_ID:-}
+      EMAIL_OUTBOX_POLL_SECONDS: ${EMAIL_OUTBOX_POLL_SECONDS:-5}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  bot:
+    profiles: ["bot"]
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN:-}
+      BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
+      CRM_API_URL: ${CRM_API_URL:-http://backend:8000}
+      TELEGRAM_INTEGRATION_SECRET: ${TELEGRAM_INTEGRATION_SECRET:?set TELEGRAM_INTEGRATION_SECRET}
+      OUTBOX_POLL_SECONDS: ${OUTBOX_POLL_SECONDS:-3}
+      TELEGRAM_PROXY_URL: ${TELEGRAM_PROXY_URL:-socks5://vless-client:1080}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      vless-client:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  vless-client:
+    profiles: ["bot"]
+    build:
+      context: .
+      dockerfile: Dockerfile.vless-client
+    restart: unless-stopped
+    init: true
+    environment:
+      VLESS_URL: ${VLESS_URL:?set VLESS_URL}
+      XRAY_SOCKS_PORT: 1080
+      XRAY_LOG_LEVEL: ${XRAY_LOG_LEVEL:-warning}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 1080), 3).close()"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  redis:
+    profiles: ["bot"]
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ceomentality_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - ceomentality_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  backup:
+    profiles: ["backup"]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:?set POSTGRES_DB}
+      PGUSER: ${POSTGRES_USER:?set POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+    volumes:
+      - ./backups:/backups
+      - ./docker/postgres-backup.sh:/usr/local/bin/postgres-backup:ro
+    command: ["sh", "/usr/local/bin/postgres-backup"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  ceomentality_postgres:
+  ceomentality_redis:
